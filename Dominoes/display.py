@@ -1,5 +1,7 @@
 class Display:
-
+    """
+    Class display the game result
+    """
     def __print_domino_snake(self, dominoes):
         domino = ""
         for d in dominoes.domino_snake:
