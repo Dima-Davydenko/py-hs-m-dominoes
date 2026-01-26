@@ -1,8 +1,19 @@
 import random
+from enum import Enum
+
+
+class Status(Enum):
+    COMP_MOVE = "computer move"
+    COMP_WON = "computer won"
+    DRAW = "draw"
+    PLAYER_MOVE = "player move"
+    PLAYER_WON = "player won"
+
 
 class Dominoes:
-    MAX_SIDE_DOTS = 6  # maximum number of dots on one domino piece |:::|:::|
+    MAX_SIDE_DOTS = 6  # maximum number of dots on one side of domino piece |:::|:::|
     START_PIECES_NUM = 7  # the number of dominoes a player has at the start of the game
+    MAX_DIGIT_NUM = 8
 
     def __init__(self):
         self.dominoes = self.__create_dominoes_pieces()
@@ -11,6 +22,7 @@ class Dominoes:
         self.stock_pieces = []
         self.domino_snake = []
         self.status = None
+        self.domino_index = 0
 
     def __create_dominoes_pieces(self):
         dominoes = []
@@ -39,28 +51,84 @@ class Dominoes:
                 highest_double = piece
         return highest_double
 
-    def __get_first_move(self, computer_pieces, player_pieces):
-        computer_highest_double = self.__find_highest_double(computer_pieces)
-        player_highest_double = self.__find_highest_double(player_pieces)
-        return computer_highest_double if computer_highest_double > player_highest_double else player_highest_double
-
-    def update_pieces_num(self, domino_piece):
-        if domino_piece in self.computer_pieces:
-            self.computer_pieces.remove(domino_piece)
-            self.status = "player"
-        elif domino_piece in self.player_pieces:
-            self.player_pieces.remove(domino_piece)
-            self.status = "computer"
+    def __set_first_move(self):
+        computer_highest_double = self.__find_highest_double(self.computer_pieces)
+        player_highest_double = self.__find_highest_double(self.player_pieces)
+        if computer_highest_double > player_highest_double:
+            self.computer_pieces.remove(computer_highest_double)
+            self.domino_snake.append(computer_highest_double)
+            self.status = Status.PLAYER_MOVE
         else:
-            print("No such domino")
-            return
-        self.domino_snake.append(domino_piece)
+            self.player_pieces.remove(player_highest_double)
+            self.domino_snake.append(player_highest_double)
+            self.status = Status.COMP_MOVE
+
+    def __validate_input_number(self):
+        while True:
+            try:
+                self.domino_index = int(input())
+                if abs(self.domino_index) > len(self.player_pieces):
+                    raise ValueError
+                else:
+                    break
+            except ValueError:
+                print("Invalid input. Please try again.")
+
+    def __update_pieces_num(self, dominoes):
+        if self.domino_index == 0:
+            domino_piece = self.stock_pieces.pop(
+                random.randint(0, len(self.stock_pieces) - 1)
+            )
+            dominoes.append(domino_piece)
+        else:
+            domino_piece = dominoes.pop(abs(self.domino_index) - 1)
+            if self.domino_index > 0:
+                self.domino_snake.append(domino_piece)
+            elif self.domino_index < 0:
+                self.domino_snake.insert(0, domino_piece)
+
+    def __is_game_end(self):
+        last_index = len(self.domino_snake) - 1
+        number = self.domino_snake[0][0]
+        if len(self.player_pieces) == 0:
+            self.status = Status.PLAYER_WON
+            return True
+        elif len(self.computer_pieces) == 0:
+            self.status = Status.COMP_WON
+            return True
+        elif number == self.domino_snake[last_index][1]:
+            sum = 0
+            for d in self.domino_snake:
+                if number in d:
+                    sum += 1
+                if sum == self.MAX_DIGIT_NUM:
+                    self.status = Status.DRAW
+                    return True
+        return False
+
+    def __make_move(self):
+        if self.status == Status.PLAYER_MOVE:
+            self.__validate_input_number()
+            self.__update_pieces_num(self.player_pieces)
+            self.status = Status.COMP_MOVE
+        elif self.status == Status.COMP_MOVE:
+            index = len(self.computer_pieces)
+            self.domino_index = random.randint(-index, index)
+            self.__update_pieces_num(self.computer_pieces)
+            self.status = Status.PLAYER_MOVE
 
     def setup_game(self):
-        self.computer_pieces = self.dominoes[:self.START_PIECES_NUM]
+        self.computer_pieces = self.dominoes[: self.START_PIECES_NUM]
         self.player_pieces = self.dominoes[
             self.START_PIECES_NUM: self.START_PIECES_NUM * 2
         ]
         self.stock_pieces = self.dominoes[self.START_PIECES_NUM * 2:]
-        first_domino = self.__get_first_move(self.computer_pieces, self.player_pieces)
-        self.update_pieces_num(first_domino)
+        self.__set_first_move()
+
+    def run_game(self, display):
+        while True:
+            self.__make_move()
+            if self.__is_game_end():
+                break
+            display.display_game(self)
+        display.display_game(self)
