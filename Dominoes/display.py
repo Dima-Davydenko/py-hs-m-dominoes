@@ -34,7 +34,8 @@ class Display:
             print("Status: It's your turn to make a move. Enter your command.")
         elif dominoes.status == Status.COMP_MOVE:
             print(
-                "Status: Computer is about to make a move. Press Enter to continue..."
+                "Status: Computer is about to make a move."
+                " Press Enter to continue..."
             )
             while True:
                 if input() == "":
