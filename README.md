@@ -18,6 +18,10 @@ The numbers on the ends of the snake are identical and appear within the snake 8
 [5,5],[5,2],[2,1],[1,5],[5,4],[4,0],[0,5],[5,3],[3,6],[6,5]\
 If this condition is satisfied, it is no longer possible to go on with this snake. Even after emptying the stock, no player will have the necessary piece. Essentially, the game has come to a permanent stop, so we have a draw.
 
+### Run the game
+To run the game just copy the code to your IDE or to an online compiler (https://www.onlinegdb.com) and press "Run" button.\
+If you copy all code to the one file don't forget to delete unnecessary imports.
+
 
 ### Example 
 
